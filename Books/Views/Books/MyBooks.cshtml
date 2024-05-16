@@ -1,15 +1,54 @@
 ﻿@model Books.ViewModels.BookGenreViewModel
 
 @{
-    ViewData["Title"] = "My Books";
+    ViewData["Title"] = "My Reads";
 }
 
-<h1>List of books</h1>
+<h1>My Reads</h1>
+
+<style>
+    body {
+        background-image: linear-gradient(to right, #ffec7a, #f2b93a);
+    }
+
+    img {
+        max-height: 300px;
+        max-width: 300px;
+        height: auto;
+        width: auto;
+    }
+
+    h1 {
+        color: dodgerblue;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    table {
+        background-color: white;
+        border-radius: 7px;
+        box-shadow: 3px 3px 3px #999;
+    }
+
+    .form-control {
+        box-shadow: 1px 1px 1px #999;
+    }
+
+    footer {
+        background-color: white;
+    }
+</style>
 
 <form asp-controller="Books" asp-action="MyBooks" method="get">
     <p>
-        Title: <input type="text" asp-for="SearchString" />
-        <input class="filter-button" type="submit" value="Filter" />
+        <div>
+            <input type="text" asp-for="SearchFunction" class="form-control" placeholder="Search by title, author, or genre..." />
+        </div>
+        <div>
+            <input type="submit" value="Filter" class="btn btn-primary" />
+        </div>
     </p>
 </form>
 
@@ -17,81 +56,71 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Books[0].FrontPage)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.Books[0].Title)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Books[0].NumPages)
+                @Html.DisplayNameFor(model => model.Books[0].Author.FullName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Books[0].Publisher)
+                @Html.DisplayNameFor(model => model.Books[0].YearPublished)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Books[0].DownloadUrl)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Books[0].Author)
+                Genres
             </th>
             <th>
                 Average Rating
             </th>
-            <th></th>
+            <th>
+                @Html.DisplayNameFor(model => model.Books[0].FrontPage)
+            </th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model.Books)
         {
-            <tr>
-                <td>
-                    <img src="~/images/@Html.DisplayFor(modelItem => item.FrontPage)" height="300px" width="300px">
-                </td>
-                <td>
+            <tr class="hoverable-row" onmouseover="this.classList.add('selected')" onmouseout="this.classList.remove('selected')">
+                <td class="title">
                     @Html.DisplayFor(modelItem => item.Title)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.NumPages)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Publisher)
-                </td>
-                <td>
-                    <a href="~/pdfs/@Html.DisplayFor(modelItem => item.DownloadUrl)" class=" edit-link">Download</a>
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Author.FullName)
                 </td>
                 <td>
-                    @if (Model.Reviews.Any())
+                    @Html.DisplayFor(modelItem => item.YearPublished)
+                </td>
+                <td>
+                    @if (item.Genres != null && item.Genres.Any())
                     {
-                        var review_total = 0;
-                        var count = 0;
-                        @foreach (var review in Model.Reviews)
-                        {
-                            if (review.BookId == item.Id && review.Rating != null)
+                        <ul>
+                            @foreach (var genre in item.Genres)
                             {
-                                count++;
-                                review_total += (int)review.Rating;
-
+                                <li>@genre.Genre.GenreName</li>
                             }
-                        }
-                        if (review_total != 0 && count != 0)
-                        {
-                            review_total = review_total / count;
-                        }
-                        <p>@review_total</p>
+                        </ul>
                     }
                     else
                     {
-                        <p>No Rating</p>
+                        <span>No genres available</span>
                     }
                 </td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="edit-link">Details</a> |
+                    @item.AverageRating()
+                </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.FrontPage))
+                    {
+                        <img src="@item.FrontPage" alt="Book Cover" />
+                    }
+                    else
+                    {
+                        <p>No image available.</p>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                     @if (User.Identity.IsAuthenticated && User.IsInRole("User"))
                     {
-                        <a asp-action="ReturnBook" asp-route-id="@item.Id" class="edit-link">Return</a>
+                        <a asp-action="ReturnBook" asp-route-id="@item.Id">Return</a>
                     }
                 </td>
             </tr>

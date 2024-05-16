@@ -9,6 +9,6 @@ namespace Books.ViewModels
         public SelectList Genre { get; set; }
         public IList<Review> Reviews { get; set; }
         public string BookGenre { get; set; }
-        public string SearchString { get; set; }
+        public string SearchFunction { get; set; }
     }
 }
