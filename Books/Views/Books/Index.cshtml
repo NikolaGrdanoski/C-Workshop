@@ -52,7 +52,7 @@
 <form asp-controller="Books" asp-action="Index" method="get">
     <div class="row">
         <div class="col-md-8">
-            <input type="text" asp-for="SearchFunction" class="form-control" placeholder="Search by author, title, or genre..." />
+            <input type="text" asp-for="SearchFunction" class="form-control" placeholder="Search by title, author, or genre..." />
         </div>
         <div class="col-md-4">
             <input type="submit" value="Filter" class="btn btn-primary" />
@@ -138,7 +138,12 @@
                         {
                             <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
                         }
-
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("User"))
+                        {
+                            <form method="post" asp-controller="Books" asp-action="Buy" asp-route-id="@item.Id">
+                                <button type="submit" class="btn btn-link">Buy</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

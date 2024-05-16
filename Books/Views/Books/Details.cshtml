@@ -1,4 +1,4 @@
-﻿@model Books.Models.Book
+﻿@model Books.ViewModels.BookDetails
 
 @{
     ViewData["Title"] = "Details";
@@ -17,56 +17,66 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
+            @Html.DisplayNameFor(model => model.Book.Title)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
+            @Html.DisplayFor(model => model.Book.Title)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.YearPublished)
+            @Html.DisplayNameFor(model => model.Book.YearPublished)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.YearPublished)
+            @Html.DisplayFor(model => model.Book.YearPublished)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NumPages)
+            @Html.DisplayNameFor(model => model.Book.NumPages)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NumPages)
+            @Html.DisplayFor(model => model.Book.NumPages)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
+            @Html.DisplayNameFor(model => model.Book.Description)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
+            @Html.DisplayFor(model => model.Book.Description)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Publisher)
+            @Html.DisplayNameFor(model => model.Book.Publisher)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Publisher)
+            @Html.DisplayFor(model => model.Book.Publisher)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FrontPage)
+            @Html.DisplayNameFor(model => model.Book.FrontPage)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FrontPage)
+            @Html.DisplayFor(model => model.Book.FrontPage)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DownloadUrl)
+            @Html.DisplayNameFor(model => model.Book.DownloadUrl)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DownloadUrl)
+            @Html.DisplayFor(model => model.Book.DownloadUrl)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Author)
+            @Html.DisplayNameFor(model => model.Book.Author)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Author.FullName)
+            @Html.DisplayFor(model => model.Book.Author.FullName)
         </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model?.Book.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
+</div>
+<div>
+    @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+    {
+        <p><a asp-action="Edit" asp-route-id="@Model?.Book.Id">Edit</a>|</p>
+    }
+    @if (Model.Purchased == "Yes")
+    {
+        <a asp-controller="Reviews" asp-action="Create" asp-route-id="@Model?.Book.Id">Add review</a>
+    }
 </div>

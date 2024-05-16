@@ -9,16 +9,21 @@ using Books.Models;
 using Books.Data;
 using Books.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Books.Areas.Identity.Data;
+using Microsoft.AspNetCore.Identity;
 
 namespace Books.Controllers
 {
     public class BooksController : Controller
     {
         private readonly BooksContext _context;
+        private readonly UserManager<BooksUser> _userManager;
 
-        public BooksController(BooksContext context)
+
+        public BooksController(BooksContext context, UserManager<BooksUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Books
@@ -86,7 +91,32 @@ namespace Books.Controllers
                 return NotFound();
             }
 
-            return View(book);
+            string purchased = "No";
+            var usr = await _userManager.GetUserAsync(HttpContext.User);
+            if (usr != null)
+            {
+                var isPurchased = await _context.UserBooks.Where(b => b.BookId == id && b.AppUser == usr.Email).FirstOrDefaultAsync();
+                if (isPurchased != null)
+                {
+                    purchased = "Yes";
+                }
+                ViewBag.Email = usr.Email;
+            }
+            else
+            {
+                ViewBag.Email = null;
+            }
+            // Get the reviews of this book
+            var all_review = await _context.Review.Where(b => b.BookId == id).ToListAsync();
+
+            var bookDetailsVM = new BookDetails
+            {
+                Book = book,
+                Reviews = all_review,
+                Purchased = purchased
+            };
+
+            return View(bookDetailsVM);
         }
 
         // GET: Books/Create
@@ -242,9 +272,87 @@ namespace Books.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> MyBooks(string searchString)
+        {
+            var usr = await _userManager.GetUserAsync(HttpContext.User);
+            IQueryable<UserBooks> books = _context.UserBooks.AsQueryable().Where(s => s.AppUser == usr.Email);
+            IQueryable<string> genreQuery = _context.Genre.Distinct().Select(g => g.GenreName).Distinct();
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                books = books.Where(s => s.Book.Title.Contains(searchString));
+            }
+
+            books = books.Include(b => b.Book).ThenInclude(b => b.Author);
+
+            var bookGenreVM = new BookGenreViewModel
+            {
+                Books = await books.Select(s => s.Book).Distinct().ToListAsync(),
+                Reviews = await _context.Review.ToListAsync()
+            };
+
+            return View(bookGenreVM);
+        }
+
         private bool BookExists(int id)
         {
             return _context.Book.Any(e => e.Id == id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> Buy(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var book = await _context.Book
+                .Include(b => b.Author)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+
+            var usr = await _userManager.GetUserAsync(HttpContext.User);
+            if (usr == null)
+            {
+                return NotFound();
+            }
+
+            var ownAlready = await _context.UserBooks.Where(s => s.AppUser == usr.Email && s.BookId == id).FirstOrDefaultAsync();
+            if (ownAlready != null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            _context.UserBooks.Add(new UserBooks { AppUser = usr.Email, BookId = id });
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> ReturnBook(int id)
+        {
+            var usr = await _userManager.GetUserAsync(HttpContext.User);
+            if (id == null)
+            {
+                return NotFound(ModelState);
+            }
+
+            var book = _context.UserBooks.Where(s => s.BookId == id && s.AppUser == usr.Email).FirstOrDefault();
+            if (book == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            _context.UserBooks.Remove(book);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(MyBooks));
         }
     }
 }
