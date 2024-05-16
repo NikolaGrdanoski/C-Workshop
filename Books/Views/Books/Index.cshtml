@@ -1,0 +1,147 @@
+﻿@model Books.ViewModels.BookFilterViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>GoodReads</h1>
+
+<style>
+    body {
+        background-image: linear-gradient(to right, #ffec7a, #f2b93a);
+    }
+
+    img {
+        max-height: 300px;
+        max-width: 300px;
+        height: auto;
+        width: auto;
+    }
+
+    h1 {
+        color: dodgerblue;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    table {
+        background-color: white;
+        border-radius: 7px;
+        box-shadow: 3px 3px 3px #999;
+    }
+
+    .form-control {
+        box-shadow: 1px 1px 1px #999;
+    }
+
+    footer {
+        background-color: white;
+    }
+</style>
+
+@if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+{
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+}
+
+
+<form asp-controller="Books" asp-action="Index" method="get">
+    <div class="row">
+        <div class="col-md-8">
+            <input type="text" asp-for="SearchFunction" class="form-control" placeholder="Search by author, title, or genre..." />
+        </div>
+        <div class="col-md-4">
+            <input type="submit" value="Filter" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+<br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CurrentBooks[0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CurrentBooks[0].Author.FullName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CurrentBooks[0].YearPublished)
+            </th>
+            <th>
+                Genres
+            </th>
+            <th>
+                Average Rating
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CurrentBooks[0].FrontPage)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.CurrentBooks != null)
+        {
+            @foreach (var item in Model.CurrentBooks)
+            {
+                <tr class="hoverable-row" onmouseover="this.classList.add('selected')" onmouseout="this.classList.remove('selected')">
+                    <td class="title">
+                        @Html.DisplayFor(modelItem => item.Title)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Author.FullName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.YearPublished)
+                    </td>
+                    <td>
+                        @if (item.Genres != null && item.Genres.Any())
+                        {
+                            <ul>
+                                @foreach (var genre in item.Genres)
+                                {
+                                    <li>@genre.Genre.GenreName</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span>No genres available</span>
+                        }
+                    </td>
+                    <td>
+                        @item.AverageRating()
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.FrontPage))
+                        {
+                            <img src="@item.FrontPage" alt="Book Cover" />
+                        }
+                        else
+                        {
+                            <p>No image available.</p>
+                        }
+                    </td>
+                    <td>
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        } |
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        }
+
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
